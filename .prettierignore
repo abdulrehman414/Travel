@@ -1,0 +1,12 @@
+node_modules
+pnpm-lock.yaml
+.next
+.turbo
+dist
+build
+out
+coverage
+*.tsbuildinfo
+packages/db/prisma/migrations
+public
+.git

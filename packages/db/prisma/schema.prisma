@@ -1,0 +1,1059 @@
+// =============================================================================
+// Saudi Luxury Travel — Prisma schema (PostgreSQL)
+// Normalized production data model. Bilingual content uses paired *En/*Ar fields.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  // native = local dev; linux-musl = Docker/alpine; rhel = Vercel/AWS Lambda.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================== ENUMS =======================================
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum PackageType {
+  HAJJ
+  UMRAH
+  DOMESTIC_TOUR
+  INTERNATIONAL_TOUR
+  CORPORATE
+  TRANSPORT
+}
+
+enum PackageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum InclusionType {
+  INCLUDED
+  EXCLUDED
+}
+
+enum DepartureStatus {
+  SCHEDULED
+  OPEN
+  CLOSED
+  SOLD_OUT
+  CANCELLED
+}
+
+enum CategoryKind {
+  PACKAGE
+  BLOG
+  DESTINATION
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+  COMPLETED
+  REFUNDED
+}
+
+enum BookingItemType {
+  PACKAGE
+  HOTEL
+  FLIGHT
+  VISA
+  TRANSPORT
+}
+
+enum PaymentProvider {
+  STRIPE
+  HYPERPAY
+  PAYTABS
+  MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  MADA
+  APPLE_PAY
+  STC_PAY
+  BANK_TRANSFER
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  VOID
+  REFUNDED
+}
+
+enum VisaType {
+  TOURIST
+  UMRAH
+  HAJJ
+  BUSINESS
+  TRANSIT
+  WORK
+  FAMILY
+}
+
+enum VisaStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  ADDITIONAL_INFO
+  APPROVED
+  REJECTED
+  ISSUED
+  CANCELLED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum NotificationType {
+  BOOKING
+  PAYMENT
+  VISA
+  SYSTEM
+  PROMOTION
+  REVIEW
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  WHATSAPP
+  SMS
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum Currency {
+  SAR
+  USD
+  EUR
+  GBP
+  AED
+}
+
+enum ContactStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  SPAM
+}
+
+enum TransportType {
+  AIRPORT_TRANSFER
+  INTERCITY
+  ZIYARAT
+  HOURLY
+  CITY_TOUR
+}
+
+enum VehicleClass {
+  SEDAN
+  SUV
+  VAN
+  BUS
+  LUXURY
+}
+
+// ============================== AUTH / RBAC =================================
+
+model User {
+  id                String     @id @default(cuid())
+  email             String     @unique
+  phone             String?    @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  avatarUrl         String?
+  gender            Gender?
+  dateOfBirth       DateTime?
+  nationality       String?
+  status            UserStatus @default(PENDING)
+  emailVerified     Boolean    @default(false)
+  phoneVerified     Boolean    @default(false)
+  locale            String     @default("en")
+  preferredCurrency Currency   @default(SAR)
+  lastLoginAt       DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?
+
+  roles               UserRole[]
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  verificationTokens  VerificationToken[]
+  bookings            Booking[]
+  reviews             Review[]
+  wishlist            WishlistItem[]
+  notifications       Notification[]
+  visaRequests        VisaRequest[]
+  invoices            Invoice[]
+  auditLogs           AuditLog[]
+  testimonials        Testimonial[]
+  posts               Post[]               @relation("PostAuthor")
+  contactMessages     ContactMessage[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String?
+  group       String
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+
+  @@index([group])
+}
+
+model UserRole {
+  userId     String
+  roleId     String
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  type      String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================== CATALOG =====================================
+
+model Destination {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  nameEn        String
+  nameAr        String
+  descriptionEn String?  @db.Text
+  descriptionAr String?  @db.Text
+  country       String
+  city          String?
+  region        String?
+  isDomestic    Boolean  @default(true)
+  latitude      Float?
+  longitude     Float?
+  heroImageUrl  String?
+  featured      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  packages Package[]
+  hotels   Hotel[]
+
+  @@index([country])
+  @@index([featured])
+}
+
+model Category {
+  id            String       @id @default(cuid())
+  kind          CategoryKind
+  slug          String
+  nameEn        String
+  nameAr        String
+  descriptionEn String?      @db.Text
+  descriptionAr String?      @db.Text
+  imageUrl      String?
+  parentId      String?
+  order         Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryTree")
+  packages Package[]
+  posts    Post[]
+
+  @@unique([kind, slug])
+  @@index([kind])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  nameEn    String
+  nameAr    String
+  createdAt DateTime @default(now())
+
+  packages PackageTag[]
+  posts    PostTag[]
+}
+
+model Package {
+  id                String        @id @default(cuid())
+  slug              String        @unique
+  type              PackageType
+  status            PackageStatus @default(DRAFT)
+  titleEn           String
+  titleAr           String
+  summaryEn         String        @db.Text
+  summaryAr         String        @db.Text
+  descriptionEn     String        @db.Text
+  descriptionAr     String        @db.Text
+  durationDays      Int
+  durationNights    Int
+  basePrice         Decimal       @db.Decimal(12, 2)
+  salePrice         Decimal?      @db.Decimal(12, 2)
+  currency          Currency      @default(SAR)
+  maxGroupSize      Int           @default(30)
+  minGroupSize      Int           @default(1)
+  rating            Float         @default(0)
+  reviewCount       Int           @default(0)
+  featured          Boolean       @default(false)
+  heroImageUrl      String?
+  mapEmbedUrl       String?
+  latitude          Float?
+  longitude         Float?
+  metaTitleEn       String?
+  metaTitleAr       String?
+  metaDescriptionEn String?
+  metaDescriptionAr String?
+  categoryId        String?
+  destinationId     String?
+  publishedAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+
+  category      Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  destination   Destination?       @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  images        PackageImage[]
+  itinerary     ItineraryDay[]
+  inclusions    PackageInclusion[]
+  departures    PackageDeparture[]
+  tags          PackageTag[]
+  reviews       Review[]
+  bookingItems  BookingItem[]
+  wishlistItems WishlistItem[]
+
+  @@index([type, status])
+  @@index([featured])
+  @@index([destinationId])
+  @@index([categoryId])
+}
+
+model PackageImage {
+  id        String  @id @default(cuid())
+  packageId String
+  url       String
+  altEn     String?
+  altAr     String?
+  order     Int     @default(0)
+  isCover   Boolean @default(false)
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId])
+}
+
+model ItineraryDay {
+  id            String  @id @default(cuid())
+  packageId     String
+  dayNumber     Int
+  titleEn       String
+  titleAr       String
+  descriptionEn String  @db.Text
+  descriptionAr String  @db.Text
+  location      String?
+  latitude      Float?
+  longitude     Float?
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, dayNumber])
+  @@index([packageId])
+}
+
+model PackageInclusion {
+  id        String        @id @default(cuid())
+  packageId String
+  type      InclusionType
+  labelEn   String
+  labelAr   String
+  order     Int           @default(0)
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId, type])
+}
+
+model PackageDeparture {
+  id            String          @id @default(cuid())
+  packageId     String
+  departureDate DateTime
+  returnDate    DateTime
+  totalSeats    Int
+  bookedSeats   Int             @default(0)
+  priceOverride Decimal?        @db.Decimal(12, 2)
+  status        DepartureStatus @default(OPEN)
+
+  package      Package       @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  bookingItems BookingItem[]
+
+  @@index([packageId, departureDate])
+  @@index([status])
+}
+
+model PackageTag {
+  packageId String
+  tagId     String
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([packageId, tagId])
+  @@index([tagId])
+}
+
+model Review {
+  id        String       @id @default(cuid())
+  packageId String
+  userId    String
+  rating    Int
+  titleEn   String?
+  comment   String       @db.Text
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, userId])
+  @@index([status])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  packageId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, packageId])
+  @@index([userId])
+}
+
+// ============================== HOTELS / FLIGHTS ============================
+
+model Hotel {
+  id                    String   @id @default(cuid())
+  slug                  String   @unique
+  externalId            String?
+  nameEn                String
+  nameAr                String
+  descriptionEn         String?  @db.Text
+  descriptionAr         String?  @db.Text
+  starRating            Int      @default(5)
+  address               String?
+  city                  String
+  country               String
+  latitude              Float?
+  longitude             Float?
+  distanceToHaramMeters Int?
+  basePricePerNight     Decimal? @db.Decimal(12, 2)
+  currency              Currency @default(SAR)
+  heroImageUrl          String?
+  amenities             String[]
+  featured              Boolean  @default(false)
+  destinationId         String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  destination Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  images      HotelImage[]
+  rooms       HotelRoom[]
+
+  @@index([city])
+  @@index([featured])
+}
+
+model HotelImage {
+  id      String @id @default(cuid())
+  hotelId String
+  url     String
+  order   Int    @default(0)
+
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@index([hotelId])
+}
+
+model HotelRoom {
+  id            String   @id @default(cuid())
+  hotelId       String
+  nameEn        String
+  nameAr        String
+  capacity      Int      @default(2)
+  pricePerNight Decimal  @db.Decimal(12, 2)
+  currency      Currency @default(SAR)
+  boardType     String?
+
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@index([hotelId])
+}
+
+model Flight {
+  id             String   @id @default(cuid())
+  externalId     String?
+  airline        String
+  airlineCode    String
+  flightNumber   String
+  origin         String
+  destination    String
+  departureTime  DateTime
+  arrivalTime    DateTime
+  cabinClass     String
+  basePrice      Decimal  @db.Decimal(12, 2)
+  currency       Currency @default(SAR)
+  seatsAvailable Int      @default(0)
+  featured       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([origin, destination])
+  @@index([departureTime])
+}
+
+model TransportService {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  type          TransportType
+  vehicleClass  VehicleClass
+  titleEn       String
+  titleAr       String
+  descriptionEn String        @db.Text
+  descriptionAr String        @db.Text
+  fromCity      String?
+  toCity        String?
+  city          String?
+  durationHours Int?
+  capacity      Int           @default(4)
+  basePrice     Decimal       @db.Decimal(12, 2)
+  currency      Currency      @default(SAR)
+  pricingUnit   String        @default("per_trip")
+  imageUrl      String?
+  featuresEn    String[]
+  featuresAr    String[]
+  featured      Boolean       @default(false)
+  active        Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([type, active])
+  @@index([featured])
+}
+
+// ============================== BOOKINGS ====================================
+
+model Booking {
+  id                 String        @id @default(cuid())
+  reference          String        @unique
+  userId             String
+  status             BookingStatus @default(PENDING)
+  currency           Currency      @default(SAR)
+  subtotal           Decimal       @db.Decimal(12, 2)
+  discountTotal      Decimal       @default(0) @db.Decimal(12, 2)
+  taxTotal           Decimal       @default(0) @db.Decimal(12, 2)
+  grandTotal         Decimal       @db.Decimal(12, 2)
+  paidTotal          Decimal       @default(0) @db.Decimal(12, 2)
+  adults             Int           @default(1)
+  children           Int           @default(0)
+  infants            Int           @default(0)
+  contactEmail       String
+  contactPhone       String
+  notes              String?       @db.Text
+  cancelledAt        DateTime?
+  cancellationReason String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items        BookingItem[]
+  travelers    Traveler[]
+  payments     Payment[]
+  invoice      Invoice?
+  visaRequests VisaRequest[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model BookingItem {
+  id            String          @id @default(cuid())
+  bookingId     String
+  type          BookingItemType
+  packageId     String?
+  departureId   String?
+  hotelRef      String?
+  flightRef     String?
+  titleSnapshot String
+  details       Json?
+  quantity      Int             @default(1)
+  unitPrice     Decimal         @db.Decimal(12, 2)
+  totalPrice    Decimal         @db.Decimal(12, 2)
+  currency      Currency        @default(SAR)
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime        @default(now())
+
+  booking   Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  package   Package?          @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  departure PackageDeparture? @relation(fields: [departureId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId])
+  @@index([type])
+}
+
+model Traveler {
+  id             String    @id @default(cuid())
+  bookingId      String
+  firstName      String
+  lastName       String
+  gender         Gender?
+  dateOfBirth    DateTime?
+  nationality    String?
+  passportNumber String?
+  passportExpiry DateTime?
+  isLead         Boolean   @default(false)
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+// ============================== PAYMENTS ====================================
+
+model Payment {
+  id                 String          @id @default(cuid())
+  bookingId          String
+  provider           PaymentProvider
+  method             PaymentMethod?
+  status             PaymentStatus   @default(PENDING)
+  amount             Decimal         @db.Decimal(12, 2)
+  currency           Currency        @default(SAR)
+  providerRef        String?
+  providerCheckoutId String?
+  rawPayload         Json?
+  paidAt             DateTime?
+  failureReason      String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  booking Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  refunds Refund[]
+
+  @@unique([provider, providerRef])
+  @@index([bookingId])
+  @@index([status])
+  @@index([provider])
+}
+
+model Refund {
+  id          String       @id @default(cuid())
+  paymentId   String
+  amount      Decimal      @db.Decimal(12, 2)
+  currency    Currency     @default(SAR)
+  status      RefundStatus @default(PENDING)
+  reason      String?
+  providerRef String?
+  processedAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  number         String        @unique
+  bookingId      String        @unique
+  userId         String
+  status         InvoiceStatus @default(ISSUED)
+  currency       Currency      @default(SAR)
+  subtotal       Decimal       @db.Decimal(12, 2)
+  taxTotal       Decimal       @default(0) @db.Decimal(12, 2)
+  discountTotal  Decimal       @default(0) @db.Decimal(12, 2)
+  total          Decimal       @db.Decimal(12, 2)
+  issuedAt       DateTime      @default(now())
+  dueAt          DateTime?
+  paidAt         DateTime?
+  pdfUrl         String?
+  billingName    String
+  billingEmail   String
+  billingAddress String?
+  vatNumber      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  booking Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items   InvoiceItem[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Int     @default(1)
+  unitPrice   Decimal @db.Decimal(12, 2)
+  total       Decimal @db.Decimal(12, 2)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+// ============================== VISA ========================================
+
+model VisaRequest {
+  id                 String     @id @default(cuid())
+  reference          String     @unique
+  userId             String
+  bookingId          String?
+  type               VisaType
+  status             VisaStatus @default(DRAFT)
+  nationality        String
+  destinationCountry String     @default("Saudi Arabia")
+  travelDate         DateTime?
+  durationDays       Int?
+  applicantFirstName String
+  applicantLastName  String
+  passportNumber     String
+  passportExpiry     DateTime
+  gender             Gender?
+  dateOfBirth        DateTime?
+  contactEmail       String
+  contactPhone       String
+  fee                Decimal?   @db.Decimal(12, 2)
+  currency           Currency   @default(SAR)
+  notes              String?    @db.Text
+  reviewedAt         DateTime?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking   Booking?       @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  documents VisaDocument[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model VisaDocument {
+  id            String   @id @default(cuid())
+  visaRequestId String
+  type          String
+  url           String
+  fileName      String
+  uploadedAt    DateTime @default(now())
+
+  visaRequest VisaRequest @relation(fields: [visaRequestId], references: [id], onDelete: Cascade)
+
+  @@index([visaRequestId])
+}
+
+// ============================== CONTENT =====================================
+
+model Post {
+  id                String     @id @default(cuid())
+  slug              String     @unique
+  status            PostStatus @default(DRAFT)
+  titleEn           String
+  titleAr           String
+  excerptEn         String     @db.Text
+  excerptAr         String     @db.Text
+  contentEn         String     @db.Text
+  contentAr         String     @db.Text
+  coverImageUrl     String?
+  readMinutes       Int        @default(5)
+  authorId          String
+  categoryId        String?
+  metaTitleEn       String?
+  metaTitleAr       String?
+  metaDescriptionEn String?
+  metaDescriptionAr String?
+  views             Int        @default(0)
+  publishedAt       DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  author   User      @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags     PostTag[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+}
+
+model PostTag {
+  postId String
+  tagId  String
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([tagId])
+}
+
+model Testimonial {
+  id              String       @id @default(cuid())
+  userId          String?
+  authorName      String
+  authorTitle     String?
+  authorAvatarUrl String?
+  country         String?
+  rating          Int          @default(5)
+  quoteEn         String       @db.Text
+  quoteAr         String       @db.Text
+  status          ReviewStatus @default(PENDING)
+  featured        Boolean      @default(false)
+  order           Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, featured])
+}
+
+model Faq {
+  id         String   @id @default(cuid())
+  category   String   @default("general")
+  questionEn String
+  questionAr String
+  answerEn   String   @db.Text
+  answerAr   String   @db.Text
+  order      Int      @default(0)
+  published  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([category])
+}
+
+// ============================== SYSTEM ======================================
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  type      NotificationType
+  channel   NotificationChannel @default(IN_APP)
+  titleEn   String
+  titleAr   String
+  bodyEn    String              @db.Text
+  bodyAr    String              @db.Text
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([type])
+}
+
+model Media {
+  id           String    @id @default(cuid())
+  type         MediaType @default(IMAGE)
+  url          String
+  publicId     String?
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  folder       String?
+  altEn        String?
+  altAr        String?
+  uploadedById String?
+  createdAt    DateTime  @default(now())
+
+  @@index([type])
+  @@index([folder])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  group     String   @default("general")
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@index([group])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  userId    String?
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String        @db.Text
+  status    ContactStatus @default(NEW)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  locale         String    @default("en")
+  confirmed      Boolean   @default(false)
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+}

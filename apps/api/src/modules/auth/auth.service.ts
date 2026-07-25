@@ -1,0 +1,179 @@
+import type { AuthResult, AuthUser, LoginInput, RegisterInput } from '@travel/types';
+import { authRepository, type UserWithRoles } from './auth.repository';
+import { hashPassword, verifyPassword } from '../../lib/password';
+import { accessTokenTtlSeconds, refreshTokenTtlSeconds, signAccessToken } from '../../lib/jwt';
+import { generateOpaqueToken, hashToken } from '../../lib/tokens';
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../../lib/api-error';
+import { emailService } from '../../integrations/email';
+import { env } from '../../config/env';
+
+export interface RequestMeta {
+  userAgent?: string;
+  ipAddress?: string;
+}
+
+export interface SessionResult {
+  result: AuthResult;
+  refreshToken: string;
+}
+
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+function toAuthUser(user: UserWithRoles): AuthUser {
+  const roles = user.roles.map((userRole) => userRole.role.slug);
+  const permissions = Array.from(
+    new Set(
+      user.roles.flatMap((userRole) =>
+        userRole.role.permissions.map((rolePermission) => rolePermission.permission.key),
+      ),
+    ),
+  );
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    avatarUrl: user.avatarUrl,
+    locale: user.locale,
+    roles,
+    permissions,
+  };
+}
+
+async function issueSession(user: UserWithRoles, meta: RequestMeta): Promise<SessionResult> {
+  const authUser = toAuthUser(user);
+  const accessToken = signAccessToken({
+    sub: user.id,
+    email: user.email,
+    roles: authUser.roles,
+    permissions: authUser.permissions,
+  });
+
+  const refreshToken = generateOpaqueToken();
+  await authRepository.createRefreshToken({
+    userId: user.id,
+    tokenHash: hashToken(refreshToken),
+    expiresAt: new Date(Date.now() + refreshTokenTtlSeconds() * 1000),
+    userAgent: meta.userAgent,
+    ipAddress: meta.ipAddress,
+  });
+
+  return {
+    result: { user: authUser, tokens: { accessToken, expiresIn: accessTokenTtlSeconds() } },
+    refreshToken,
+  };
+}
+
+export const authService = {
+  async register(input: RegisterInput, meta: RequestMeta): Promise<SessionResult> {
+    if (await authRepository.emailExists(input.email)) {
+      throw new ConflictError('An account with this email already exists');
+    }
+    const passwordHash = await hashPassword(input.password);
+    const user = await authRepository.createCustomer({
+      email: input.email,
+      passwordHash,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      phone: input.phone,
+      locale: input.locale,
+    });
+    void emailService.sendWelcome(user.email, { firstName: user.firstName });
+    return issueSession(user, meta);
+  },
+
+  async login(input: LoginInput, meta: RequestMeta): Promise<SessionResult> {
+    const user = await authRepository.findByEmail(input.email);
+    if (!user) {
+      throw new UnauthorizedError('Invalid email or password');
+    }
+    const valid = await verifyPassword(input.password, user.passwordHash);
+    if (!valid) {
+      throw new UnauthorizedError('Invalid email or password');
+    }
+    if (user.status === 'SUSPENDED' || user.status === 'INACTIVE') {
+      throw new UnauthorizedError('Your account is not active. Please contact support.');
+    }
+    await authRepository.updateLastLogin(user.id);
+    return issueSession(user, meta);
+  },
+
+  async refresh(rawToken: string | undefined, meta: RequestMeta): Promise<SessionResult> {
+    if (!rawToken) {
+      throw new UnauthorizedError('Missing refresh token');
+    }
+    const tokenHash = hashToken(rawToken);
+    const stored = await authRepository.findRefreshToken(tokenHash);
+    if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
+      throw new UnauthorizedError('Invalid or expired session');
+    }
+    const user = await authRepository.findById(stored.userId);
+    if (!user) {
+      throw new UnauthorizedError('Invalid session');
+    }
+    // Rotate: revoke the used token before issuing a new one.
+    await authRepository.revokeRefreshToken(tokenHash);
+    return issueSession(user, meta);
+  },
+
+  async logout(rawToken: string | undefined): Promise<void> {
+    if (rawToken) {
+      await authRepository.revokeRefreshToken(hashToken(rawToken));
+    }
+  },
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await authRepository.findByEmail(email);
+    // Do not reveal whether the account exists.
+    if (!user) return;
+
+    await authRepository.invalidateUserResetTokens(user.id);
+    const token = generateOpaqueToken(32);
+    await authRepository.createPasswordResetToken({
+      userId: user.id,
+      tokenHash: hashToken(token),
+      expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MS),
+    });
+
+    const resetUrl = `${env.WEB_APP_URL}/reset-password?token=${token}`;
+    void emailService.sendPasswordReset(user.email, { firstName: user.firstName, resetUrl });
+  },
+
+  async resetPassword(rawToken: string, newPassword: string): Promise<void> {
+    const stored = await authRepository.findValidResetToken(hashToken(rawToken));
+    if (!stored) {
+      throw new BadRequestError('Invalid or expired reset token');
+    }
+    const passwordHash = await hashPassword(newPassword);
+    await authRepository.updatePassword(stored.userId, passwordHash);
+    await authRepository.markResetTokenUsed(stored.id);
+    await authRepository.revokeAllRefreshTokens(stored.userId);
+  },
+
+  async changePassword(userId: string, current: string, next: string): Promise<void> {
+    const user = await authRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+    const valid = await verifyPassword(current, user.passwordHash);
+    if (!valid) {
+      throw new BadRequestError('Current password is incorrect');
+    }
+    const passwordHash = await hashPassword(next);
+    await authRepository.updatePassword(userId, passwordHash);
+    await authRepository.revokeAllRefreshTokens(userId);
+  },
+
+  async me(userId: string): Promise<AuthUser> {
+    const user = await authRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+    return toAuthUser(user);
+  },
+};
