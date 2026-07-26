@@ -5,6 +5,10 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "types": ["node"],
+    // Base lib is ES2022 (no DOM). The native fetch() Response type — and its
+    // .json()/.text() methods — live in the DOM lib; without it, stricter
+    // compilers (e.g. Vercel's @vercel/node) report TS2339 on res.json().
+    "lib": ["ES2022", "DOM"],
     "outDir": "dist",
     "rootDir": "src",
     "noEmit": true,
