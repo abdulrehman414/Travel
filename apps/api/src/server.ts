@@ -7,10 +7,12 @@ import { API } from '@travel/config/constants';
 function bootstrap(): void {
   const app = createApp();
 
-  const server = app.listen(env.API_PORT, env.API_HOST, () => {
-    logger.info(
-      `🚀 API listening on http://${env.API_HOST}:${env.API_PORT}${API.prefix}`,
-    );
+  // Managed hosts (Railway, Render, Fly, Heroku) inject the port to bind via
+  // $PORT and route to it; honour that, falling back to API_PORT for Docker/local.
+  const port = process.env.PORT ? Number(process.env.PORT) : env.API_PORT;
+
+  const server = app.listen(port, env.API_HOST, () => {
+    logger.info(`🚀 API listening on http://${env.API_HOST}:${port}${API.prefix}`);
   });
 
   const shutdown = (signal: string): void => {
