@@ -15,6 +15,7 @@
     "clean": "rimraf .turbo node_modules dist"
   },
   "dependencies": {
+    "@prisma/client": "^6.1.0",
     "@travel/config": "workspace:*",
     "@travel/db": "workspace:*",
     "@travel/types": "workspace:*",

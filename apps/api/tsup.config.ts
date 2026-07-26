@@ -1,7 +1,9 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/server.ts'],
+  // server.ts = long-running Node server (Docker/local); serverless.ts = the
+  // exported Express app for Function runtimes (Vercel). Both are self-contained.
+  entry: ['src/server.ts', 'src/serverless.ts'],
   format: ['esm'],
   target: 'node20',
   outDir: 'dist',
