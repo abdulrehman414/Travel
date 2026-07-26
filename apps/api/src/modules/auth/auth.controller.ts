@@ -4,7 +4,9 @@ import type {
   ForgotPasswordInput,
   LoginInput,
   RegisterInput,
+  ResendVerificationInput,
   ResetPasswordInput,
+  VerifyEmailInput,
 } from '@travel/types';
 import { authService } from './auth.service';
 import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from './auth.cookies';
@@ -67,6 +69,16 @@ export const authController = {
     const { token, password } = req.body as ResetPasswordInput;
     await authService.resetPassword(token, password);
     sendSuccess(res, { reset: true }, 'Password reset successfully.');
+  },
+
+  async verifyEmail(req: Request, res: Response): Promise<void> {
+    const user = await authService.verifyEmail((req.body as VerifyEmailInput).token);
+    sendSuccess(res, user, 'Email verified successfully.');
+  },
+
+  async resendVerification(req: Request, res: Response): Promise<void> {
+    await authService.resendVerification((req.body as ResendVerificationInput).email);
+    sendSuccess(res, { sent: true }, 'If your email needs verifying, a new link has been sent.');
   },
 
   async changePassword(req: Request, res: Response): Promise<void> {

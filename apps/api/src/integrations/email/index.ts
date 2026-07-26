@@ -2,14 +2,21 @@ import { env, isTest } from '../../config/env';
 import { logger } from '../../config/logger';
 import type { EmailMessage, EmailProvider } from './email.types';
 import { NodemailerProvider } from './nodemailer.provider';
+import { ResendProvider } from './resend.provider';
 import { MockEmailProvider } from './mock.provider';
-import { renderPasswordResetEmail, renderWelcomeEmail } from './templates';
+import {
+  renderPasswordResetEmail,
+  renderVerificationEmail,
+  renderWelcomeEmail,
+} from './templates';
 
 function selectProvider(): EmailProvider {
-  if (isTest || !env.SMTP_HOST) {
-    return new MockEmailProvider();
-  }
-  return new NodemailerProvider();
+  if (isTest) return new MockEmailProvider();
+  // Prefer Resend (HTTP API) when configured — best for serverless.
+  if (env.RESEND_API_KEY) return new ResendProvider();
+  // Fall back to SMTP (Mailhog in dev, or any SMTP host in prod).
+  if (env.SMTP_HOST) return new NodemailerProvider();
+  return new MockEmailProvider();
 }
 
 const provider = selectProvider();
@@ -34,6 +41,10 @@ export const emailService = {
 
   sendWelcome(to: string, params: { firstName: string }): Promise<boolean> {
     return this.send(renderWelcomeEmail(to, params));
+  },
+
+  sendVerification(to: string, params: { firstName: string; verifyUrl: string }): Promise<boolean> {
+    return this.send(renderVerificationEmail(to, params));
   },
 
   sendPasswordReset(to: string, params: { firstName: string; resetUrl: string }): Promise<boolean> {

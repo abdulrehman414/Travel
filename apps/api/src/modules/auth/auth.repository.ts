@@ -52,7 +52,9 @@ export const authRepository = {
         lastName: data.lastName,
         phone: data.phone,
         locale: data.locale,
-        status: 'ACTIVE',
+        // Unverified until they confirm their email; login is still allowed,
+        // the UI surfaces a "verify your email" state until emailVerified flips.
+        status: 'PENDING',
         ...(customerRole ? { roles: { create: { roleId: customerRole.id } } } : {}),
       },
       include: userRolesInclude,
@@ -111,6 +113,40 @@ export const authRepository = {
     return prisma.passwordResetToken.updateMany({
       where: { userId, usedAt: null },
       data: { usedAt: new Date() },
+    });
+  },
+
+  createVerificationToken(data: {
+    userId: string;
+    tokenHash: string;
+    type: string;
+    expiresAt: Date;
+  }): Promise<unknown> {
+    return prisma.verificationToken.create({ data });
+  },
+
+  findValidVerificationToken(tokenHash: string, type: string) {
+    return prisma.verificationToken.findFirst({
+      where: { tokenHash, type, usedAt: null, expiresAt: { gt: new Date() } },
+    });
+  },
+
+  markVerificationTokenUsed(id: string): Promise<unknown> {
+    return prisma.verificationToken.update({ where: { id }, data: { usedAt: new Date() } });
+  },
+
+  invalidateUserVerificationTokens(userId: string, type: string): Promise<unknown> {
+    return prisma.verificationToken.updateMany({
+      where: { userId, type, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+  },
+
+  markEmailVerified(userId: string): Promise<UserWithRoles> {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { emailVerified: true, status: 'ACTIVE' },
+      include: userRolesInclude,
     });
   },
 };

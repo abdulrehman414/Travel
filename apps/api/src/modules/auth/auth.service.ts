@@ -23,6 +23,26 @@ export interface SessionResult {
 }
 
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
+const EMAIL_VERIFICATION_TYPE = 'EMAIL_VERIFICATION';
+const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+/** Issues a fresh single-use email-verification token and emails the link. */
+async function issueEmailVerification(user: {
+  id: string;
+  email: string;
+  firstName: string;
+}): Promise<void> {
+  await authRepository.invalidateUserVerificationTokens(user.id, EMAIL_VERIFICATION_TYPE);
+  const token = generateOpaqueToken(32);
+  await authRepository.createVerificationToken({
+    userId: user.id,
+    tokenHash: hashToken(token),
+    type: EMAIL_VERIFICATION_TYPE,
+    expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),
+  });
+  const verifyUrl = `${env.WEB_APP_URL}/verify-email?token=${token}`;
+  void emailService.sendVerification(user.email, { firstName: user.firstName, verifyUrl });
+}
 
 function toAuthUser(user: UserWithRoles): AuthUser {
   const roles = user.roles.map((userRole) => userRole.role.slug);
@@ -40,6 +60,7 @@ function toAuthUser(user: UserWithRoles): AuthUser {
     lastName: user.lastName,
     avatarUrl: user.avatarUrl,
     locale: user.locale,
+    emailVerified: user.emailVerified,
     roles,
     permissions,
   };
@@ -83,8 +104,29 @@ export const authService = {
       phone: input.phone,
       locale: input.locale,
     });
-    void emailService.sendWelcome(user.email, { firstName: user.firstName });
+    await issueEmailVerification(user);
     return issueSession(user, meta);
+  },
+
+  async verifyEmail(rawToken: string): Promise<AuthUser> {
+    const stored = await authRepository.findValidVerificationToken(
+      hashToken(rawToken),
+      EMAIL_VERIFICATION_TYPE,
+    );
+    if (!stored) {
+      throw new BadRequestError('This verification link is invalid or has expired');
+    }
+    const user = await authRepository.markEmailVerified(stored.userId);
+    await authRepository.markVerificationTokenUsed(stored.id);
+    void emailService.sendWelcome(user.email, { firstName: user.firstName });
+    return toAuthUser(user);
+  },
+
+  async resendVerification(email: string): Promise<void> {
+    const user = await authRepository.findByEmail(email);
+    // Never reveal whether the account exists or is already verified.
+    if (!user || user.emailVerified) return;
+    await issueEmailVerification(user);
   },
 
   async login(input: LoginInput, meta: RequestMeta): Promise<SessionResult> {

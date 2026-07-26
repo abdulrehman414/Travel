@@ -1,4 +1,4 @@
-import type { AuthResult, LoginInput, RegisterInput } from '@travel/types';
+import type { AuthResult, AuthUser, LoginInput, RegisterInput } from '@travel/types';
 import { API_URL } from './api-client';
 
 async function authRequest<T>(path: string, body?: unknown): Promise<T> {
@@ -23,4 +23,7 @@ export const authApi = {
   forgotPassword: (email: string) => authRequest('/auth/forgot-password', { email }),
   resetPassword: (token: string, password: string) =>
     authRequest('/auth/reset-password', { token, password }),
+  verifyEmail: (token: string) => authRequest<AuthUser>('/auth/verify-email', { token }),
+  resendVerification: (email: string) =>
+    authRequest('/auth/resend-verification', { email }),
 };

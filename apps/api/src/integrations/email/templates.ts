@@ -57,6 +57,27 @@ export function renderWelcomeEmail(to: string, params: { firstName: string }): E
   };
 }
 
+export function renderVerificationEmail(
+  to: string,
+  params: { firstName: string; verifyUrl: string },
+): EmailMessage {
+  const name = escapeHtml(params.firstName);
+  const body = `
+    <h1 style="margin:0 0 12px;font-size:24px;">Confirm your email</h1>
+    <p style="margin:0 0 16px;line-height:1.6;color:#334155;">
+      Hi ${name}, thanks for joining ${escapeHtml(APP.name)}. Please confirm this is your
+      email address to activate your account. This link expires in 24 hours.
+    </p>
+    <p style="margin:24px 0;">${button(params.verifyUrl, 'Verify my email')}</p>
+    <p style="margin:0;font-size:13px;color:#94A3B8;word-break:break-all;">${escapeHtml(params.verifyUrl)}</p>`;
+  return {
+    to,
+    subject: `Verify your ${APP.name} email`,
+    html: layout('Verify your email', body),
+    text: `Confirm your email to activate your ${APP.name} account: ${params.verifyUrl}`,
+  };
+}
+
 export function renderPasswordResetEmail(
   to: string,
   params: { firstName: string; resetUrl: string },

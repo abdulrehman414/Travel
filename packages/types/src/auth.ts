@@ -62,6 +62,16 @@ export const refreshTokenSchema = z.object({
 });
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(10, 'Invalid or missing token'),
+});
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+export const resendVerificationSchema = z.object({
+  email: emailSchema,
+});
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
+
 /** Authenticated principal shape shared with the frontend. */
 export interface AuthUser {
   id: string;
@@ -70,6 +80,7 @@ export interface AuthUser {
   lastName: string;
   avatarUrl?: string | null;
   locale: string;
+  emailVerified: boolean;
   roles: string[];
   permissions: string[];
 }

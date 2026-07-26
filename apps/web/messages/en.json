@@ -39,18 +39,48 @@
     "ctaButton": "Get in touch"
   },
   "services": {
-    "hajj": { "title": "Hajj Packages", "desc": "Complete, guided Hajj with premium camps and support." },
-    "umrah": { "title": "Umrah Packages", "desc": "Five-star stays steps from the Haram, year-round." },
-    "tours": { "title": "Saudi Tours", "desc": "AlUla, the Red Sea, Riyadh and beyond, curated." },
-    "hotels": { "title": "Hotels", "desc": "Handpicked luxury hotels at the best rates." },
-    "flights": { "title": "Flights", "desc": "Seamless flight booking across the globe." },
-    "transport": { "title": "Transportation", "desc": "Airport transfers, intercity & guided ziyarat rides." },
-    "visa": { "title": "Visa Services", "desc": "Fast, fully-managed visa processing." }
+    "hajj": {
+      "title": "Hajj Packages",
+      "desc": "Complete, guided Hajj with premium camps and support."
+    },
+    "umrah": {
+      "title": "Umrah Packages",
+      "desc": "Five-star stays steps from the Haram, year-round."
+    },
+    "tours": {
+      "title": "Saudi Tours",
+      "desc": "AlUla, the Red Sea, Riyadh and beyond, curated."
+    },
+    "hotels": {
+      "title": "Hotels",
+      "desc": "Handpicked luxury hotels at the best rates."
+    },
+    "flights": {
+      "title": "Flights",
+      "desc": "Seamless flight booking across the globe."
+    },
+    "transport": {
+      "title": "Transportation",
+      "desc": "Airport transfers, intercity & guided ziyarat rides."
+    },
+    "visa": {
+      "title": "Visa Services",
+      "desc": "Fast, fully-managed visa processing."
+    }
   },
   "why": {
-    "concierge": { "title": "24/7 Concierge", "desc": "A dedicated expert with you at every step." },
-    "value": { "title": "Best value", "desc": "Premium experiences at transparent prices." },
-    "trusted": { "title": "Trusted & licensed", "desc": "Fully licensed with thousands of happy travellers." }
+    "concierge": {
+      "title": "24/7 Concierge",
+      "desc": "A dedicated expert with you at every step."
+    },
+    "value": {
+      "title": "Best value",
+      "desc": "Premium experiences at transparent prices."
+    },
+    "trusted": {
+      "title": "Trusted & licensed",
+      "desc": "Fully licensed with thousands of happy travellers."
+    }
   },
   "footer": {
     "tagline": "Luxury Hajj, Umrah and tailor-made travel across Saudi Arabia.",
@@ -153,15 +183,39 @@
     "title": "Visa services",
     "subtitle": "Fast, fully-managed visa processing for your journey to Saudi Arabia.",
     "typesTitle": "Visa types we handle",
-    "umrah": { "title": "Umrah visa", "desc": "For pilgrims performing Umrah, processed end to end." },
-    "hajj": { "title": "Hajj visa", "desc": "Dedicated support for the annual Hajj pilgrimage." },
-    "tourist": { "title": "Tourist visa", "desc": "Explore the Kingdom with a hassle-free tourist visa." },
-    "business": { "title": "Business visa", "desc": "For corporate travel and business engagements." },
+    "umrah": {
+      "title": "Umrah visa",
+      "desc": "For pilgrims performing Umrah, processed end to end."
+    },
+    "hajj": {
+      "title": "Hajj visa",
+      "desc": "Dedicated support for the annual Hajj pilgrimage."
+    },
+    "tourist": {
+      "title": "Tourist visa",
+      "desc": "Explore the Kingdom with a hassle-free tourist visa."
+    },
+    "business": {
+      "title": "Business visa",
+      "desc": "For corporate travel and business engagements."
+    },
     "stepsTitle": "How it works",
-    "step1": { "title": "Apply", "desc": "Share your details and travel dates." },
-    "step2": { "title": "Documents", "desc": "Upload your passport and photos securely." },
-    "step3": { "title": "Processing", "desc": "We handle the application on your behalf." },
-    "step4": { "title": "Approved", "desc": "Receive your visa and travel with confidence." },
+    "step1": {
+      "title": "Apply",
+      "desc": "Share your details and travel dates."
+    },
+    "step2": {
+      "title": "Documents",
+      "desc": "Upload your passport and photos securely."
+    },
+    "step3": {
+      "title": "Processing",
+      "desc": "We handle the application on your behalf."
+    },
+    "step4": {
+      "title": "Approved",
+      "desc": "Receive your visa and travel with confidence."
+    },
     "ctaTitle": "Ready to apply?",
     "ctaSubtitle": "Our visa team will guide you through every step.",
     "ctaButton": "Start your application",
@@ -176,10 +230,22 @@
     "statsTravellers": "Happy travellers",
     "statsDestinations": "Destinations",
     "valuesTitle": "What we stand for",
-    "excellence": { "title": "Excellence", "desc": "Five-star standards in everything we deliver." },
-    "trust": { "title": "Trust", "desc": "Fully licensed, transparent and dependable." },
-    "care": { "title": "Genuine care", "desc": "A dedicated concierge for every traveller." },
-    "reach": { "title": "Global reach", "desc": "Partners and destinations across the world." }
+    "excellence": {
+      "title": "Excellence",
+      "desc": "Five-star standards in everything we deliver."
+    },
+    "trust": {
+      "title": "Trust",
+      "desc": "Fully licensed, transparent and dependable."
+    },
+    "care": {
+      "title": "Genuine care",
+      "desc": "A dedicated concierge for every traveller."
+    },
+    "reach": {
+      "title": "Global reach",
+      "desc": "Partners and destinations across the world."
+    }
   },
   "contactPage": {
     "title": "Contact us",
@@ -248,7 +314,24 @@
     "haveAccount": "Already have an account?",
     "backToLogin": "Back to sign in",
     "loading": "Please wait…",
-    "genericError": "Something went wrong. Please try again."
+    "genericError": "Something went wrong. Please try again.",
+    "verifyTitle": "Verify your email",
+    "verifyChecking": "Confirming your email address…",
+    "verifySuccessTitle": "Email verified",
+    "verifySuccessSubtitle": "Your account is now active.",
+    "verifySuccessBody": "Thanks — your email is confirmed and your account is fully active.",
+    "verifyErrorSubtitle": "That verification link is invalid or has expired.",
+    "verifyIdleSubtitle": "Enter your email to receive a new verification link.",
+    "verifyResendButton": "Resend verification email",
+    "verifyResent": "If your email needs verifying, a new link is on its way.",
+    "resetTitle": "Set a new password",
+    "resetSubtitle": "Choose a strong new password for your account.",
+    "resetInvalidSubtitle": "This reset link is missing or invalid.",
+    "resetButton": "Update password",
+    "resetDone": "Your password has been updated. You can now sign in.",
+    "verifyBanner": "Please verify your email address to secure your account.",
+    "verifyBannerResend": "Resend email",
+    "verifyBannerSent": "Verification email sent."
   },
   "booking": {
     "title": "Complete your booking",

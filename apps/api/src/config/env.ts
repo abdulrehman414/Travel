@@ -59,6 +59,9 @@ const envSchema = z.object({
   SMTP_PASSWORD: optionalString,
   MAIL_FROM_NAME: z.string().default('Saudi Luxury Travel'),
   MAIL_FROM_ADDRESS: z.string().default('no-reply@saudiluxurytravel.com'),
+  // Resend (https://resend.com) transactional email — preferred on serverless
+  // (HTTP API, no SMTP ports). When set, it takes precedence over SMTP.
+  RESEND_API_KEY: optionalString,
 
   // Integrations — all optional; absence triggers a local mock adapter.
   CLOUDINARY_CLOUD_NAME: optionalString,

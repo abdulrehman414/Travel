@@ -5,7 +5,9 @@ import {
   loginSchema,
   refreshTokenSchema,
   registerSchema,
+  resendVerificationSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
 } from '@travel/types';
 import { authController } from './auth.controller';
 import { asyncHandler } from '../../lib/async-handler';
@@ -36,6 +38,19 @@ authRouter.post(
 );
 
 authRouter.post('/logout', asyncHandler(authController.logout));
+
+authRouter.post(
+  '/verify-email',
+  validate({ body: verifyEmailSchema }),
+  asyncHandler(authController.verifyEmail),
+);
+
+authRouter.post(
+  '/resend-verification',
+  authRateLimiter,
+  validate({ body: resendVerificationSchema }),
+  asyncHandler(authController.resendVerification),
+);
 
 authRouter.post(
   '/forgot-password',
