@@ -330,7 +330,8 @@
     "resetDone": "تم تحديث كلمة المرور. يمكنك تسجيل الدخول الآن.",
     "verifyBanner": "يرجى تفعيل بريدك الإلكتروني لتأمين حسابك.",
     "verifyBannerResend": "إعادة الإرسال",
-    "verifyBannerSent": "تم إرسال رسالة التفعيل."
+    "verifyBannerSent": "تم إرسال رسالة التفعيل.",
+    "orContinue": "أو"
   },
   "booking": {
     "title": "أكمل حجزك",

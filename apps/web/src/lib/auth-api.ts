@@ -26,4 +26,5 @@ export const authApi = {
   verifyEmail: (token: string) => authRequest<AuthUser>('/auth/verify-email', { token }),
   resendVerification: (email: string) =>
     authRequest('/auth/resend-verification', { email }),
+  google: (idToken: string) => authRequest<AuthResult>('/auth/google', { idToken }),
 };

@@ -129,9 +129,59 @@ export const authService = {
     await issueEmailVerification(user);
   },
 
+  async loginWithGoogle(idToken: string, meta: RequestMeta): Promise<SessionResult> {
+    if (!env.GOOGLE_CLIENT_ID) {
+      throw new BadRequestError('Google sign-in is not configured');
+    }
+    // Validate the ID token with Google (checks signature/expiry server-side).
+    const res = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`,
+    );
+    if (!res.ok) {
+      throw new UnauthorizedError('Google sign-in failed. Please try again.');
+    }
+    const info = (await res.json()) as {
+      aud?: string;
+      sub?: string;
+      email?: string;
+      email_verified?: string | boolean;
+      given_name?: string;
+      family_name?: string;
+      name?: string;
+      picture?: string;
+    };
+    const emailVerified = info.email_verified === true || info.email_verified === 'true';
+    if (!info.sub || !info.email || info.aud !== env.GOOGLE_CLIENT_ID || !emailVerified) {
+      throw new UnauthorizedError('Google sign-in failed. Please try again.');
+    }
+
+    const email = info.email.toLowerCase();
+    const firstName = info.given_name ?? info.name ?? email.split('@')[0] ?? 'User';
+    const lastName = info.family_name ?? '';
+
+    // 1) known Google account → 2) same email (link) → 3) brand-new account.
+    let user = await authRepository.findByGoogleId(info.sub);
+    if (!user) {
+      const existing = await authRepository.findByEmail(email);
+      user = existing
+        ? await authRepository.linkGoogleAccount(existing.id, info.sub)
+        : await authRepository.createGoogleUser({
+            email,
+            googleId: info.sub,
+            firstName,
+            lastName,
+            avatarUrl: info.picture,
+            locale: 'en',
+          });
+    }
+    await authRepository.updateLastLogin(user.id);
+    return issueSession(user, meta);
+  },
+
   async login(input: LoginInput, meta: RequestMeta): Promise<SessionResult> {
     const user = await authRepository.findByEmail(input.email);
-    if (!user) {
+    // A null passwordHash means the account was created via Google sign-in.
+    if (!user || !user.passwordHash) {
       throw new UnauthorizedError('Invalid email or password');
     }
     const valid = await verifyPassword(input.password, user.passwordHash);
@@ -201,6 +251,11 @@ export const authService = {
     const user = await authRepository.findById(userId);
     if (!user) {
       throw new NotFoundError('User not found');
+    }
+    if (!user.passwordHash) {
+      throw new BadRequestError(
+        'This account signs in with Google. Use "Forgot password" to set a password first.',
+      );
     }
     const valid = await verifyPassword(current, user.passwordHash);
     if (!valid) {

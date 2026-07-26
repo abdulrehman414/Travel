@@ -149,4 +149,42 @@ export const authRepository = {
       include: userRolesInclude,
     });
   },
+
+  findByGoogleId(googleId: string): Promise<UserWithRoles | null> {
+    return prisma.user.findUnique({ where: { googleId }, include: userRolesInclude });
+  },
+
+  async createGoogleUser(data: {
+    email: string;
+    googleId: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl?: string;
+    locale: string;
+  }): Promise<UserWithRoles> {
+    const customerRole = await prisma.role.findUnique({ where: { slug: 'customer' } });
+    return prisma.user.create({
+      data: {
+        email: data.email,
+        googleId: data.googleId,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        avatarUrl: data.avatarUrl,
+        locale: data.locale,
+        // Google has already verified the email, so the account is active.
+        status: 'ACTIVE',
+        emailVerified: true,
+        ...(customerRole ? { roles: { create: { roleId: customerRole.id } } } : {}),
+      },
+      include: userRolesInclude,
+    });
+  },
+
+  linkGoogleAccount(userId: string, googleId: string): Promise<UserWithRoles> {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { googleId, emailVerified: true },
+      include: userRolesInclude,
+    });
+  },
 };

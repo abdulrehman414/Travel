@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import type {
   ChangePasswordInput,
   ForgotPasswordInput,
+  GoogleLoginInput,
   LoginInput,
   RegisterInput,
   ResendVerificationInput,
@@ -43,6 +44,15 @@ export const authController = {
     );
     setRefreshCookie(res, refreshToken);
     sendSuccess(res, result, 'Logged in successfully');
+  },
+
+  async loginWithGoogle(req: Request, res: Response): Promise<void> {
+    const { result, refreshToken } = await authService.loginWithGoogle(
+      (req.body as GoogleLoginInput).idToken,
+      requestMeta(req),
+    );
+    setRefreshCookie(res, refreshToken);
+    sendSuccess(res, result, 'Signed in with Google');
   },
 
   async refresh(req: Request, res: Response): Promise<void> {

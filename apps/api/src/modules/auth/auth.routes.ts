@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   changePasswordSchema,
   forgotPasswordSchema,
+  googleLoginSchema,
   loginSchema,
   refreshTokenSchema,
   registerSchema,
@@ -29,6 +30,13 @@ authRouter.post(
   authRateLimiter,
   validate({ body: loginSchema }),
   asyncHandler(authController.login),
+);
+
+authRouter.post(
+  '/google',
+  authRateLimiter,
+  validate({ body: googleLoginSchema }),
+  asyncHandler(authController.loginWithGoogle),
 );
 
 authRouter.post(

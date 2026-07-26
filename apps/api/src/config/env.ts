@@ -91,6 +91,10 @@ const envSchema = z.object({
 
   GOOGLE_MAPS_SERVER_KEY: optionalString,
 
+  // Google Sign-In: OAuth 2.0 Web client ID. Used to validate the audience of
+  // ID tokens sent from the browser. Absent → the /auth/google route is disabled.
+  GOOGLE_CLIENT_ID: optionalString,
+
   WHATSAPP_PHONE_NUMBER_ID: optionalString,
   WHATSAPP_ACCESS_TOKEN: optionalString,
   WHATSAPP_API_VERSION: z.string().default('v21.0'),

@@ -7,6 +7,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { AuthShell, Field } from '@/components/auth/auth-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
 
 export default function LoginPage() {
   const t = useTranslations('auth');
@@ -49,6 +50,12 @@ export default function LoginPage() {
           {loading ? t('loading') : t('loginButton')}
         </Button>
       </form>
+      <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        {t('orContinue')}
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <GoogleSignInButton />
       <div className="mt-5 flex items-center justify-between text-sm">
         <Link href="/forgot-password" className="text-primary hover:underline">
           {t('forgotLink')}

@@ -7,6 +7,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { AuthShell, Field } from '@/components/auth/auth-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
 
 export default function RegisterPage() {
   const t = useTranslations('auth');
@@ -66,6 +67,12 @@ export default function RegisterPage() {
           {loading ? t('loading') : t('registerButton')}
         </Button>
       </form>
+      <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        {t('orContinue')}
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <GoogleSignInButton />
       <p className="mt-5 text-center text-sm text-muted-foreground">
         {t('haveAccount')}{' '}
         <Link href="/login" className="text-primary hover:underline">

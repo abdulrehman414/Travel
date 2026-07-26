@@ -62,6 +62,11 @@ export const refreshTokenSchema = z.object({
 });
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 
+export const googleLoginSchema = z.object({
+  idToken: z.string().min(20, 'Missing Google credential'),
+});
+export type GoogleLoginInput = z.infer<typeof googleLoginSchema>;
+
 export const verifyEmailSchema = z.object({
   token: z.string().min(10, 'Invalid or missing token'),
 });

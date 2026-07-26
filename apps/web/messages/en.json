@@ -331,7 +331,8 @@
     "resetDone": "Your password has been updated. You can now sign in.",
     "verifyBanner": "Please verify your email address to secure your account.",
     "verifyBannerResend": "Resend email",
-    "verifyBannerSent": "Verification email sent."
+    "verifyBannerSent": "Verification email sent.",
+    "orContinue": "or"
   },
   "booking": {
     "title": "Complete your booking",
