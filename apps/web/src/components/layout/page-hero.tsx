@@ -37,14 +37,21 @@ export function PageHero({
   subtitle,
   breadcrumbs,
   children,
+  immersive,
 }: {
   title: string;
   subtitle?: string;
   breadcrumbs?: Crumb[];
   children?: ReactNode;
+  immersive?: boolean;
 }) {
   return (
-    <section className="relative overflow-hidden border-b border-border bg-brand-gradient">
+    <section
+      className={cn(
+        'relative overflow-hidden border-b',
+        immersive ? 'border-white/10' : 'border-border bg-brand-gradient',
+      )}
+    >
       <div className="absolute inset-0 bg-[radial-gradient(60%_120%_at_50%_0%,rgba(212,175,55,0.22),transparent)]" />
       <div className="container-px relative mx-auto max-w-[1360px] py-16 text-center">
         {breadcrumbs && (

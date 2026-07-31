@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Award, Globe2, HeartHandshake, ShieldCheck } from 'lucide-react';
 import { PageHero } from '@/components/layout/page-hero';
 import { Card } from '@/components/ui/card';
+import { ImmersiveShell } from '@/components/immersive/immersive-shell';
 
 const VALUES = [
   { key: 'excellence', Icon: Award },
@@ -17,8 +18,9 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
   const tn = await getTranslations('nav');
 
   return (
-    <>
+    <ImmersiveShell>
       <PageHero
+        immersive
         title={t('title')}
         subtitle={t('subtitle')}
         breadcrumbs={[{ label: tn('home'), href: '/' }, { label: t('title') }]}
@@ -58,6 +60,6 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
           ))}
         </div>
       </section>
-    </>
+    </ImmersiveShell>
   );
 }

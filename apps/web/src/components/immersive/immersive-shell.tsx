@@ -8,7 +8,10 @@ import { ImmersiveBackground } from './immersive-background';
  */
 export function ImmersiveShell({ children }: { children: ReactNode }) {
   return (
-    <div className="immersive-root">
+    // `dark` scopes the theme tokens to their dark values, so pages built with
+    // semantic classes (bg-card, text-foreground, …) turn cinematic over the
+    // globe with no per-element rewrites.
+    <div className="immersive-root dark">
       <ImmersiveBackground />
       <div className="relative z-10">{children}</div>
     </div>

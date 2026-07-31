@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { LayoutDashboard, LogOut, Menu, Plane, X } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
+import { isImmersiveRoute } from '@/lib/immersive-routes';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -39,16 +40,18 @@ export function Header() {
 
   if (pathname.startsWith('/admin')) return null;
 
-  // On the immersive home hero the bar is transparent; the `dark` scope keeps the
-  // theme-aware nav/icons legible over the night-sky backdrop. It solidifies on scroll.
+  // On immersive routes the bar is dark-scoped to match the cinematic pages; on the
+  // home hero it starts transparent and solidifies on scroll.
+  const immersive = isImmersiveRoute(pathname);
   const transparent = pathname === '/' && !scrolled && !open;
 
   return (
     <header
       className={cn(
         'sticky top-0 z-50 w-full transition-all duration-300',
+        immersive && 'dark',
         transparent
-          ? 'dark border-b border-transparent bg-transparent'
+          ? 'border-b border-transparent bg-transparent'
           : 'border-b border-border/60 bg-background/80 backdrop-blur-md',
       )}
     >

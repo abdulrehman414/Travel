@@ -4,6 +4,8 @@ import { useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plane } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
+import { cn } from '@/lib/utils';
+import { isImmersiveRoute } from '@/lib/immersive-routes';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api-client';
 
@@ -68,7 +70,7 @@ export function Footer() {
   if (pathname.startsWith('/admin')) return null;
 
   return (
-    <footer className="border-t border-border bg-secondary/30">
+    <footer className={cn('border-t border-border bg-secondary/30', isImmersiveRoute(pathname) && 'dark')}>
       <div className="container-px mx-auto max-w-[1360px] py-14">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">

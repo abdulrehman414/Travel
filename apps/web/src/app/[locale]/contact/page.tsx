@@ -3,6 +3,7 @@ import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { APP } from '@travel/config/constants';
 import { PageHero } from '@/components/layout/page-hero';
 import { ContactForm } from '@/components/contact-form';
+import { ImmersiveShell } from '@/components/immersive/immersive-shell';
 
 export default async function ContactPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -18,8 +19,9 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
   ];
 
   return (
-    <>
+    <ImmersiveShell>
       <PageHero
+        immersive
         title={t('title')}
         subtitle={t('subtitle')}
         breadcrumbs={[{ label: tn('home'), href: '/' }, { label: t('title') }]}
@@ -51,6 +53,6 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
           <ContactForm />
         </div>
       </section>
-    </>
+    </ImmersiveShell>
   );
 }
