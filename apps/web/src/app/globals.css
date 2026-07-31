@@ -123,4 +123,56 @@
       opacity: 1;
     }
   }
+
+  /* Tasteful accent for functional page headers: two soft drifting glows.
+     Header-only — the dense page body stays fast, light and untouched. */
+  .hero-aurora::before,
+  .hero-aurora::after {
+    content: '';
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(64px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hero-aurora::before {
+    width: 360px;
+    height: 360px;
+    top: -140px;
+    inset-inline-start: 6%;
+    background: radial-gradient(circle, rgba(231, 200, 106, 0.55), transparent 70%);
+    animation: aurora-a 15s ease-in-out infinite;
+  }
+  .hero-aurora::after {
+    width: 320px;
+    height: 320px;
+    bottom: -150px;
+    inset-inline-end: 8%;
+    background: radial-gradient(circle, rgba(65, 224, 207, 0.4), transparent 70%);
+    animation: aurora-b 19s ease-in-out infinite;
+  }
+  @keyframes aurora-a {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(42px, 28px) scale(1.15);
+    }
+  }
+  @keyframes aurora-b {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(-48px, -22px) scale(1.12);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-aurora::before,
+    .hero-aurora::after {
+      animation: none;
+    }
+  }
 }

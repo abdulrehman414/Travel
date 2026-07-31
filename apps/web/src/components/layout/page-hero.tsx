@@ -49,11 +49,11 @@ export function PageHero({
     <section
       className={cn(
         'relative overflow-hidden border-b',
-        immersive ? 'border-white/10' : 'border-border bg-brand-gradient',
+        immersive ? 'border-white/10' : 'border-border bg-brand-gradient hero-aurora',
       )}
     >
       <div className="absolute inset-0 bg-[radial-gradient(60%_120%_at_50%_0%,rgba(212,175,55,0.22),transparent)]" />
-      <div className="container-px relative mx-auto max-w-[1360px] py-16 text-center">
+      <div className="container-px relative z-10 mx-auto max-w-[1360px] py-16 text-center">
         {breadcrumbs && (
           <div className="mb-5">
             <Breadcrumbs items={breadcrumbs} light />
