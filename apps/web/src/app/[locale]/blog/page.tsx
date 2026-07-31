@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Paginated, PostListItemDto } from '@travel/types';
 import { PageHero } from '@/components/layout/page-hero';
 import { PostCard } from '@/components/post-card';
+import { ImmersiveShell } from '@/components/immersive/immersive-shell';
 import { apiFetchSafe } from '@/lib/api-client';
 
 const EMPTY: Paginated<PostListItemDto> = {
@@ -17,8 +18,9 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
   const data = await apiFetchSafe<Paginated<PostListItemDto>>('/posts?limit=12', EMPTY);
 
   return (
-    <>
+    <ImmersiveShell>
       <PageHero
+        immersive
         title={t('title')}
         subtitle={t('subtitle')}
         breadcrumbs={[{ label: tn('home'), href: '/' }, { label: t('title') }]}
@@ -34,6 +36,6 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
           </div>
         )}
       </section>
-    </>
+    </ImmersiveShell>
   );
 }
