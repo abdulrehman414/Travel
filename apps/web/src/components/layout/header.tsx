@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { LayoutDashboard, LogOut, Menu, Plane, X } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -27,11 +28,30 @@ export function Header() {
   const { status, user, logout } = useAuth();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   if (pathname.startsWith('/admin')) return null;
 
+  // On the immersive home hero the bar is transparent; the `dark` scope keeps the
+  // theme-aware nav/icons legible over the night-sky backdrop. It solidifies on scroll.
+  const transparent = pathname === '/' && !scrolled && !open;
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
+    <header
+      className={cn(
+        'sticky top-0 z-50 w-full transition-all duration-300',
+        transparent
+          ? 'dark border-b border-transparent bg-transparent'
+          : 'border-b border-border/60 bg-background/80 backdrop-blur-md',
+      )}
+    >
       <div className="container-px mx-auto flex h-16 max-w-[1360px] items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold">
           <span className="grid size-9 place-items-center rounded-xl bg-brand-gradient text-white">

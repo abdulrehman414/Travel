@@ -21,7 +21,6 @@ interface GoogleIdApi {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   interface Window {
     google?: GoogleIdApi;
   }
