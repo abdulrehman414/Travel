@@ -9,6 +9,7 @@ import { inter, tajawal } from '@/lib/fonts';
 import { Providers } from '@/components/providers';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { ImmersiveBackground } from '@/components/immersive/immersive-background';
 import { JsonLd } from '@/components/json-ld';
 import { cn } from '@/lib/utils';
 import '../globals.css';
@@ -53,7 +54,7 @@ export default async function LocaleLayout({
       suppressHydrationWarning
       className={cn(inter.variable, tajawal.variable)}
     >
-      <body className="min-h-dvh bg-background font-sans text-foreground">
+      <body className="min-h-dvh bg-[#060a18] font-sans text-foreground antialiased">
         <JsonLd
           data={{
             '@context': 'https://schema.org',
@@ -74,7 +75,8 @@ export default async function LocaleLayout({
         />
         <NextIntlClientProvider messages={messages}>
           <Providers>
-            <div className="flex min-h-dvh flex-col">
+            <ImmersiveBackground />
+            <div className="relative z-10 flex min-h-dvh flex-col">
               <Header />
               <main className="flex-1">{children}</main>
               <Footer />

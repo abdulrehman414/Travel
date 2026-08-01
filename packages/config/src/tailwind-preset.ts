@@ -88,7 +88,7 @@ const preset: Omit<Config, 'content'> = {
         gold: shadows.gold,
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg, #006C35 0%, #004522 100%)',
+        'brand-gradient': 'linear-gradient(140deg, #123163 0%, #0a1a3f 55%, #0c2445 100%)',
         'gold-gradient': 'linear-gradient(135deg, #E6CA66 0%, #B8942B 100%)',
         'hero-overlay':
           'linear-gradient(180deg, rgba(17,24,39,0.05) 0%, rgba(17,24,39,0.55) 100%)',

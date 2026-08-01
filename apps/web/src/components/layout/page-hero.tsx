@@ -37,7 +37,6 @@ export function PageHero({
   subtitle,
   breadcrumbs,
   children,
-  immersive,
 }: {
   title: string;
   subtitle?: string;
@@ -47,10 +46,7 @@ export function PageHero({
 }) {
   return (
     <section
-      className={cn(
-        'relative overflow-hidden border-b',
-        immersive ? 'border-white/10' : 'border-border bg-brand-gradient hero-aurora',
-      )}
+      className={cn('relative overflow-hidden border-b border-white/10')}
     >
       <div className="absolute inset-0 bg-[radial-gradient(60%_120%_at_50%_0%,rgba(212,175,55,0.22),transparent)]" />
       <div className="container-px relative z-10 mx-auto max-w-[1360px] py-16 text-center">

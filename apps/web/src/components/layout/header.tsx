@@ -5,9 +5,7 @@ import { useTranslations } from 'next-intl';
 import { LayoutDashboard, LogOut, Menu, Plane, X } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
-import { isImmersiveRoute } from '@/lib/immersive-routes';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useAuth } from '@/components/auth/auth-provider';
 
@@ -40,16 +38,14 @@ export function Header() {
 
   if (pathname.startsWith('/admin')) return null;
 
-  // On immersive routes the bar is dark-scoped to match the cinematic pages; on the
-  // home hero it starts transparent and solidifies on scroll.
-  const immersive = isImmersiveRoute(pathname);
-  const transparent = pathname === '/' && !scrolled && !open;
+  // Transparent over the globe at the top of every page; solidifies to dark glass
+  // on scroll. The whole app is dark (forcedTheme), so text stays light throughout.
+  const transparent = !scrolled && !open;
 
   return (
     <header
       className={cn(
         'sticky top-0 z-50 w-full transition-all duration-300',
-        immersive && 'dark',
         transparent
           ? 'border-b border-transparent bg-transparent'
           : 'border-b border-border/60 bg-background/80 backdrop-blur-md',
@@ -77,7 +73,6 @@ export function Header() {
 
         <div className="flex items-center gap-1">
           <LanguageSwitcher />
-          <ThemeToggle />
           {status === 'authenticated' ? (
             <>
               <Button asChild size="sm" variant="ghost" className="hidden sm:inline-flex">
